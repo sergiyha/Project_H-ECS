@@ -59,22 +59,11 @@ namespace Project_H.ECS
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private void FillArchetypeCollection(in BitMask archetypeMask, SparseSet sparseSet)
 		{
-			var allEntitiesInfoValues = _entitiesInfoSparset.GetAllValues();
-			var count = _entitiesInfoSparset.GetCount();
-
-			int i2 = 0;
-			for (int i = 0; i < allEntitiesInfoValues.Length; i++)
+			foreach (var entityInfo in _entitiesInfoSparset)
 			{
-				var arr = allEntitiesInfoValues[i];
-
-				for (int j = 0; j < arr.Length && i2 < count; j++)
+				if (entityInfo.Matches(archetypeMask))
 				{
-					i2++;
-					var entityInfo = arr[j];
-					if (entityInfo.Matches(archetypeMask))
-					{
-						sparseSet.Add(entityInfo.GetId());
-					}
+					sparseSet.Add(entityInfo.GetId());
 				}
 			}
 		}

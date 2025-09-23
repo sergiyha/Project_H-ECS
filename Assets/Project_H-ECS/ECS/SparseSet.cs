@@ -94,16 +94,9 @@ namespace Project_H.ECS
 		private readonly T[][] _values;
 		private int count = 0;
 
-		public int GetCount() => count;
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(int id, in T component)
 		{
-			// if (Has(id))
-			// {
-			//  return;
-			// }
-
 			int chunkIndex = count >> _n;
 			int innerIndex = count & _chunkSizeMinOne;
 
@@ -212,16 +205,33 @@ namespace Project_H.ECS
 		}
 
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<T[]> GetAllValues()
+		public struct Enumerator
 		{
-			return _values.AsSpan(0, _capacity);
+			private readonly SparseSet<T> _set;
+			private int _index;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public Enumerator(SparseSet<T> set)
+			{
+				_set = set;
+				_index = -1;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public bool MoveNext() => ++_index < _set.count;
+
+			public ref T Current
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get
+				{
+					var chunkIndex = _index >> _n;
+					var innerIndex = _index & _chunkSizeMinOne;
+					return ref _set._values[chunkIndex][innerIndex];
+				}
+			}
 		}
 
-		// [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		// public Span<int> GetAllIDs()
-		// {
-		//  return _dense.AsSpan(0, count);
-		// }
+		public Enumerator GetEnumerator() => new(this);
 	}
 }
