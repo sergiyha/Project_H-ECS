@@ -76,52 +76,82 @@ namespace Project_H.ECS
 
 	public class SparseSet<T>
 	{
-		public SparseSet(int entriesCount)
+		private static int _chunkSize = 128;
+		private static int _chunkSizeMinOne = _chunkSize - 1;
+		private static int _n = 7;
+		private static int _chuncksCount = 1000;
+		private int _capacity = -1;
+
+		public SparseSet()
 		{
-			_sparse = new int[entriesCount];
-			_dense = new int[entriesCount];
-			_values = new T[entriesCount];
+			_sparse = new int[_chunkSize * _chuncksCount];
+			_dense = new int[_chuncksCount][];
+			_values = new T[_chuncksCount][];
 		}
 
 		private readonly int[] _sparse;
-		private readonly int[] _dense;
-		private readonly T[] _values;
+		private readonly int[][] _dense;
+		private readonly T[][] _values;
 		private int count = 0;
+
+		public int GetCount() => count;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(int id, in T component)
 		{
-			if (Has(id))
+			// if (Has(id))
+			// {
+			//  return;
+			// }
+
+			int chunkIndex = count >> _n;
+			int innerIndex = count & _chunkSizeMinOne;
+
+			if (chunkIndex > _capacity)
 			{
-				return;
+				//Debug.LogError("resize id: " + id + $"type of{typeof(T)}");
+				_capacity++;
+				_dense[_capacity] = new int[_chunkSize];
+				_values[_capacity] = new T[_chunkSize];
 			}
 
 			_sparse[id] = count;
-			_dense[count] = id;
-			_values[count] = component;
+			_dense[chunkIndex][innerIndex] = id;
+			_values[chunkIndex][innerIndex] = component;
 			count++;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has(in int entityID)
 		{
-			int index = _sparse[entityID];
-			return index < count && _dense[index] == entityID;
+			var index = _sparse[entityID];
+
+			var chunkIndex = index >> _n;
+			var innerIndex = index & _chunkSizeMinOne;
+			return index < count && _dense[chunkIndex][innerIndex] == entityID;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T GetRef(in int entityID)
 		{
-			return ref _values[_sparse[entityID]];
+			int index = _sparse[entityID];
+
+			var chunkIndex = index >> _n;
+			var innerIndex = index & _chunkSizeMinOne;
+			return ref _values[chunkIndex][innerIndex];
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool TryGet(in int entityId, out T value)
 		{
 			int index = _sparse[entityId];
-			if (index < count && _dense[index] == entityId)
+
+			var chunkIndex = index >> _n;
+			var innerIndex = index & _chunkSizeMinOne;
+
+			if (index < count && _dense[chunkIndex][innerIndex] == entityId)
 			{
-				value = _values[index];
+				value = _values[chunkIndex][innerIndex];
 				return true;
 			}
 
@@ -133,9 +163,12 @@ namespace Project_H.ECS
 		public bool TryGetRef(in int entityId, ref T value)
 		{
 			int index = _sparse[entityId];
-			if (index < count && _dense[index] == entityId)
+
+			var chunkIndex = index >> _n;
+			var innerIndex = index & _chunkSizeMinOne;
+			if (index < count && _dense[chunkIndex][innerIndex] == entityId)
 			{
-				value = ref _values[index];
+				value = ref _values[chunkIndex][innerIndex];
 				return true;
 			}
 
@@ -144,9 +177,14 @@ namespace Project_H.ECS
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Set(int id, in T component, out T replacedComponent)
+		public void Set(int entityId, in T component, out T replacedComponent)
 		{
-			ref var val = ref _values[_sparse[id]];
+			int index = _sparse[entityId];
+
+			var chunkIndex = index >> _n;
+			var innerIndex = index & _chunkSizeMinOne;
+
+			ref var val = ref _values[chunkIndex][innerIndex];
 			replacedComponent = val;
 			val = component;
 		}
@@ -154,56 +192,36 @@ namespace Project_H.ECS
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Remove(int entityID, out T removedItem)
 		{
-			int index = _sparse[entityID];
-			removedItem = _values[index];
-			int last = count - 1;
-			int lastEntity = _dense[last];
+			int replaceIndex = _sparse[entityID];
 
-			_values[index] = _values[last];
-			_dense[index] = lastEntity;
-			_sparse[lastEntity] = index;
+			int chunkValuesOldIndex = replaceIndex >> _n;
+			int innerValuesOldIndex = replaceIndex & _chunkSizeMinOne;
+
+			removedItem = _values[chunkValuesOldIndex][innerValuesOldIndex];
+			int last = count - 1;
+
+			int chunkValuesLastIndex = last >> _n;
+			int innerValuesLastIndex = last & _chunkSizeMinOne;
+			int lastEntityID = _dense[chunkValuesLastIndex][innerValuesLastIndex];
+
+			_values[chunkValuesOldIndex][innerValuesOldIndex] = _values[chunkValuesLastIndex][innerValuesLastIndex];
+			_dense[chunkValuesOldIndex][innerValuesOldIndex] = lastEntityID;
+			_sparse[lastEntityID] = replaceIndex;
 
 			count--;
 		}
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<T> GetAllValues()
+		public Span<T[]> GetAllValues()
 		{
-			return _values.AsSpan(0, count);
+			return _values.AsSpan(0, _capacity);
 		}
 
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<int> GetAllIDs()
-		{
-			return _dense.AsSpan(0, count);
-		}
-	}
-
-	public class ArrayWrapper<T>
-	{
-		private int _indexToAdd = 0;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ArrayWrapper(int count)
-		{
-			_array = new T[count];
-		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add(T obj)
-		{
-			if (_indexToAdd == _array.Length) Debug.LogError("Cannot Add more");
-			_array[_indexToAdd] = obj;
-			_indexToAdd++;
-		}
-
-		private T[] _array;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<T> GetArray()
-		{
-			return _array.AsSpan(0, _indexToAdd);
-		}
+		// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		// public Span<int> GetAllIDs()
+		// {
+		//  return _dense.AsSpan(0, count);
+		// }
 	}
 }

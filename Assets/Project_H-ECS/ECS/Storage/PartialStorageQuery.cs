@@ -60,15 +60,25 @@ namespace Project_H.ECS
 		private void FillArchetypeCollection(in BitMask archetypeMask, SparseSet sparseSet)
 		{
 			var allEntitiesInfoValues = _entitiesInfoSparset.GetAllValues();
+			var count = _entitiesInfoSparset.GetCount();
+
+			int i2 = 0;
 			for (int i = 0; i < allEntitiesInfoValues.Length; i++)
 			{
-				var entityInfo = allEntitiesInfoValues[i];
-				if (entityInfo.Matches(archetypeMask))
+				var arr = allEntitiesInfoValues[i];
+
+				for (int j = 0; j < arr.Length && i2 < count; j++)
 				{
-					sparseSet.Add(entityInfo.GetId());
+					i2++;
+					var entityInfo = arr[j];
+					if (entityInfo.Matches(archetypeMask))
+					{
+						sparseSet.Add(entityInfo.GetId());
+					}
 				}
 			}
 		}
+
 
 		public interface IWrappedQuery<TTarget> where TTarget : class
 		{

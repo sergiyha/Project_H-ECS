@@ -16,7 +16,7 @@ namespace Project_H.ECS
 
 	public class ComponentContainer<T> : IComponentContainer where T : IComponent
 	{
-		private SparseSet<T> _sparseSet = new(Storage.MaxEntitiesCount);
+		private SparseSet<T> _sparseSet = new();
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public ref T Get(in Entity entity) => ref _sparseSet.GetRef(in entity.ID);
@@ -40,12 +40,8 @@ namespace Project_H.ECS
 		{
 			_sparseSet.Remove(entity.ID, out removedComponent);
 		}
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<int> GetEntities()
-		{
-			return _sparseSet.GetAllIDs();
-		}
+		
+		
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has(in Entity entity) => _sparseSet.Has(entity.ID);

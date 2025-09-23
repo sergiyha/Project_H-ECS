@@ -53,14 +53,9 @@ namespace Project_H.ECS
 		private Dictionary<BitMask, SparseSet> _archetypesEntity = new();
 
 		private Dictionary<int, List<ArchetypesHolder>> _compBitToArchetypes = new();
-		private SparseSet<IComponentContainer> _components = new(MaxComponentsCount);
-		private SparseSet<EntityInfo> _entitiesInfoSparset = new(MaxEntitiesCount);
-
-
-		public Span<int> GetAllEntities()
-		{
-			return _entitiesInfoSparset.GetAllIDs();
-		}
+		private SparseSet<IComponentContainer> _components = new();
+		private SparseSet<EntityInfo> _entitiesInfoSparset = new();
+		
 
 
 		private Storage(byte id)
