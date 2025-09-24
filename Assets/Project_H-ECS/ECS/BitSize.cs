@@ -1,116 +1,79 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Project_H_ECS.ECS.Helper;
 using UnityEngine;
 
 namespace Project_H.ECS
 {
-
 	public struct BitMask : IEquatable<BitMask>
 	{
-		private int[] _bits;
+		private ulong[] _bits;
 		private int[] _ids;
 
 		public BitMask(int sizeInBits)
 		{
-			_bits = new int[(sizeInBits + 31) / 32];
-			_ids = new int[sizeInBits / 4];
+			_bits = new ulong[(sizeInBits + 63) / 64];
+			_ids = new int[sizeInBits / 4]; // still a heuristic buffer
 		}
-
-		// [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		// public void EnsureSize(int bit)
-		// {
-		// 	int index = bit / 32;
-		// 	if (_bits.Length <= index)
-		// 	{
-		// 		int newSize = Math.Max(index + 1, _bits.Length * 2);
-		// 		Array.Resize(ref _bits, newSize);
-		// 		//should clear unused bits
-		// 	}
-		// }
-
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBit(int bit)
 		{
-			//EnsureSize(bit);
-			int index = bit / 32;
+			int index = bit >> 6;
 			if (index >= _bits.Length)
 				throw new IndexOutOfRangeException("Bit index exceeds bitmask size.");
-			_bits[index] |= 1 << (bit % 32);
+			_bits[index] |= 1UL << (bit & 63);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBits(Span<int> bits)
 		{
 			for (int i = 0; i < bits.Length; i++)
-			{
 				SetBit(bits[i]);
-			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void SetBits(List<int> bits)
 		{
 			for (int i = 0; i < bits.Count; i++)
-			{
 				SetBit(bits[i]);
-			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void ClearBit(int bit)
 		{
-			int index = bit / 32;
+			int index = bit >> 6; //bit / 64;
 			if (index < _bits.Length)
-				_bits[index] &= ~(1 << (bit % 32));
+				_bits[index] &= ~(1UL << (bit & 63));
 			else
-			{
 				throw new IndexOutOfRangeException("Bit index exceeds bitmask size.");
-			}
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool HasBit(int bit)
 		{
-			int index = bit / 32;
-			return index < _bits.Length && (_bits[index] & (1 << (bit % 32))) != 0;
+			int index = bit >> 6;
+			return index < _bits.Length && (_bits[index] & (1UL << (bit & 63))) != 0;
 		}
 
-		// [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		// public bool Matches(in BitMask otherMast)
-		// {
-		// 	int len = otherMast._bits.Length;
-		// 	if (_bits.Length < len) return false;
-		//
-		// 	for (int i = 0; i < len; i++)
-		// 	{
-		// 		if(otherMast._bits[i] == 0)continue;
-		// 		if ((otherMast._bits[i] & _bits[i]) != otherMast._bits[i])
-		// 			return false;
-		// 	}
-		//
-		// 	return true;
-		// }
-
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Matches(in BitMask otherMast)
+		public bool Matches(in BitMask otherMask)
 		{
-			int len = otherMast._bits.Length;
+			int len = otherMask._bits.Length;
 			if (_bits.Length < len) return false;
 
 			for (int i = 0; i < len; i++)
 			{
-				int other = otherMast._bits[i];
+				ulong other = otherMask._bits[i];
 				if (other == 0) continue;
 
-				if ((other & _bits[i]) != other)
+				if ((_bits[i] & other) != other)
 					return false;
 			}
 
 			return true;
 		}
-
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Clear()
@@ -119,79 +82,90 @@ namespace Project_H.ECS
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		// public Span<int> GetIndexes()
+		// {
+		// 	int count = 0;
+		//
+		// 	for (int i = 0; i < _bits.Length; i++)
+		// 	{
+		// 		ulong chunk = _bits[i];
+		// 		if (chunk == 0) continue;
+		//
+		// 		for (int bit = 0; bit < 64; bit++)
+		// 		{
+		// 			if ((chunk & (1UL << bit)) != 0)
+		// 			{
+		// 				if (count >= _ids.Length)
+		// 					throw new InvalidOperationException("Buffer too small");
+		//
+		// 				_ids[count++] = i * 64 + bit;
+		// 			}
+		// 		}
+		// 	}
+		//
+		// 	return _ids.AsSpan(0, count);
+		// }
 		public Span<int> GetIndexes()
 		{
 			int count = 0;
 
 			for (int i = 0; i < _bits.Length; i++)
 			{
-				if (_bits[i] == 0) continue;
-				uint chunk = (uint)_bits[i];
-
-				for (int bit = 0; bit < 32; bit++)
+				ulong chunk = _bits[i];
+				while (chunk != 0)
 				{
-					if ((chunk & (1 << bit)) != 0)
-					{
-						if (count >= _ids.Length)
-							throw new InvalidOperationException("Buffer too small");
+					int bit = MathUtil.TrailingZeroCount(chunk);
+					int index = (i << 6) + bit;
 
-						_ids[count++] = i * 32 + bit;
-					}
+					if (count >= _ids.Length)
+						throw new InvalidOperationException("Buffer too small");
+
+					_ids[count++] = index;
+
+					chunk &= chunk - 1; // clear lowest set bit
 				}
 			}
 
 			return _ids.AsSpan(0, count);
 		}
 
-		//if you have problem with unsafe version use this
-		// public bool Equals(BitMask other)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		//[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		// public unsafe bool Equals(BitMask other)
 		// {
-		// 	for (int i = 0; i < _bits.Length; i++)
+		// 	if (_bits.Length != other._bits.Length)
+		// 		return false;
+		//
+		// 	fixed (ulong* a = _bits, b = other._bits)
 		// 	{
-		// 		if (_bits[i] != other._bits[i])
-		// 			return false;
+		// 		for (int i = 0; i < _bits.Length; i++)
+		// 		{
+		// 			if (a[i] != b[i])
+		// 				return false;
+		// 		}
 		// 	}
-		// 		
+		//
 		// 	return true;
 		// }
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public unsafe bool Equals(BitMask other)
-		{
-			if (_bits.Length != other._bits.Length)
-				return false;
-
-			fixed (int* a = _bits, b = other._bits)
-			{
-				for (int i = 0; i < _bits.Length; i++)
-				{
-					if (a[i] != b[i])
-						return false;
-				}
-			}
-
-			return true;
-		}
+		public bool Equals(BitMask other)
+			=> _bits.AsSpan().SequenceEqual(other._bits);
 
 		public override bool Equals(object obj)
 		{
 			throw new InvalidOperationException("cannot be boxed");
 		}
 
-		//very base implementation
-		// [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+		// FNV-1a 64-bit hash
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		//[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		// public override int GetHashCode()
 		// {
-		// 	HashCode hashCode = new HashCode();
-		// 	for (int i = 0; i < _bits.Length; i++)
-		// 	{
-		// 		hashCode.Add(_bits[i]);
-		// 	}
-		// 	return hashCode.ToHashCode();
+		// 	HashCode hc = new HashCode();
+		// 	foreach (var b in _bits)
+		// 		hc.Add(b);
+		// 	return hc.ToHashCode();
 		// }
-
-		//FNV-1a 64-bit hash
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public override int GetHashCode()
 		{
 			unchecked
@@ -202,7 +176,7 @@ namespace Project_H.ECS
 
 				for (int i = 0; i < _bits.Length; i++)
 				{
-					hash ^= (ulong)_bits[i];
+					hash ^= _bits[i];
 					hash *= fnvPrime;
 				}
 

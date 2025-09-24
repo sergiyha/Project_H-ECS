@@ -11,6 +11,7 @@ namespace Project_H.ECS
 	{
 		protected ComponentContainer<T> _componentContainerT;
 		private Enumerator _enumerator;
+
 		public delegate void QueryDelegate(Entity e, ref T componentT);
 
 		public override void Init(byte storeId)
@@ -29,11 +30,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity));
 			}
 		}
@@ -121,11 +120,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity));
 			}
 		}
@@ -162,11 +159,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity));
 			}
 		}
@@ -259,11 +254,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity));
 			}
 		}
@@ -304,11 +297,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity));
 			}
@@ -407,11 +398,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity));
 			}
@@ -457,11 +446,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity));
 			}
@@ -565,11 +552,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity));
 			}
@@ -619,11 +604,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity));
 			}
@@ -732,11 +715,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity));
 			}
@@ -792,11 +773,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity));
@@ -912,11 +891,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity));
@@ -977,11 +954,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity));
@@ -1102,11 +1077,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity));
@@ -1171,11 +1144,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity), ref _componentContainerT7.Get(in entity));
@@ -1301,11 +1272,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity), ref _componentContainerT7.Get(in entity));
@@ -1374,11 +1343,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity), ref _componentContainerT7.Get(in entity),
@@ -1510,11 +1477,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity), ref _componentContainerT7.Get(in entity),
@@ -1588,11 +1553,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity), ref _componentContainerT7.Get(in entity),
@@ -1729,11 +1692,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity), ref _componentContainerT7.Get(in entity),
@@ -1811,11 +1772,9 @@ namespace Project_H.ECS
 
 		public void ExecuteOn(QueryDelegate action)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				action?.Invoke(entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity), ref _componentContainerT7.Get(in entity),
@@ -1887,7 +1846,7 @@ namespace Project_H.ECS
 			private Query<T, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10> _query;
 			private int _index;
 			private QueryResult _result;
-			
+
 			public bool MoveNext()
 			{
 				if (++_index < _query.GetCount())
@@ -1958,11 +1917,9 @@ namespace Project_H.ECS
 	{
 		public void ExecuteOn(WrappedQueryDelegate @delegate, TTarget target)
 		{
-			var entities = _entities.GetEntities();
-			var count = GetCount();
-			for (int i = 0; i < count; i++)
+			foreach (var entityId in _entities)
 			{
-				var entity = Storage.ConstructEntity(entities[i], _storeId);
+				var entity = Storage.ConstructEntity(entityId, _storeId);
 				@delegate?.Invoke(target, entity, ref _componentContainerT.Get(in entity), ref _componentContainerT1.Get(in entity),
 					ref _componentContainerT2.Get(in entity), ref _componentContainerT3.Get(in entity), ref _componentContainerT4.Get(in entity),
 					ref _componentContainerT5.Get(in entity), ref _componentContainerT6.Get(in entity), ref _componentContainerT7.Get(in entity),
