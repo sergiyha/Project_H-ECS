@@ -105,7 +105,6 @@ namespace Project_H.ECS
 		//
 		// 	return _ids.AsSpan(0, count);
 		// }
-		
 		public Span<int> GetIndexes()
 		{
 			int count = 0;

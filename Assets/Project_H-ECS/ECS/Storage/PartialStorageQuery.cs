@@ -24,7 +24,7 @@ namespace Project_H.ECS
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private SparseSet TryGetEntitiesSet(Span<int> archetype)
+		private CommonSparseSet TryGetEntitiesSet(Span<int> archetype)
 		{
 			_reusableTempCompBitmask.Clear();
 			_reusableTempCompBitmask.SetBits(archetype);
@@ -32,7 +32,7 @@ namespace Project_H.ECS
 			{
 				var newArchetypeBitmask = new BitMask(MaxComponentsCount);
 				newArchetypeBitmask.SetBits(_reusableTempCompBitmask.GetIndexes());
-				archetypeSparset = new SparseSet(MaxEntitiesCount);
+				archetypeSparset = new CommonSparseSet(EntityChunkCount, ChunkSize);
 				_archetypesEntity[newArchetypeBitmask] = archetypeSparset;
 				FillArchetypeCollection(in newArchetypeBitmask, archetypeSparset);
 				InitCompBitToArchetype(in archetype, archetypeSparset, in newArchetypeBitmask);
@@ -41,7 +41,7 @@ namespace Project_H.ECS
 			return archetypeSparset;
 		}
 
-		private void InitCompBitToArchetype(in Span<int> bits, SparseSet archetypeEnttSparset, in BitMask bitMask)
+		private void InitCompBitToArchetype(in Span<int> bits, CommonSparseSet archetypeEnttSparset, in BitMask bitMask)
 		{
 			for (int i = 0; i < bits.Length; i++)
 			{
@@ -57,13 +57,13 @@ namespace Project_H.ECS
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void FillArchetypeCollection(in BitMask archetypeMask, SparseSet sparseSet)
+		private void FillArchetypeCollection(in BitMask archetypeMask, CommonSparseSet commonSparseSet)
 		{
 			foreach (var entityInfo in _entitiesInfoSparset)
 			{
 				if (entityInfo.Matches(archetypeMask))
 				{
-					sparseSet.Add(entityInfo.GetId());
+					commonSparseSet.Add(entityInfo.GetId());
 				}
 			}
 		}
@@ -76,7 +76,7 @@ namespace Project_H.ECS
 		public abstract class AQuery
 		{
 			protected byte _storeId;
-			protected SparseSet _entities;
+			protected CommonSparseSet _entities;
 			protected int[] _archetype;
 
 			protected abstract void CreateArchetype();
@@ -85,15 +85,10 @@ namespace Project_H.ECS
 			public void GetEntities(List<Entity> entities)
 			{
 				entities.Clear();
-				foreach (var enttId in _entities.GetEntities())
+				foreach (var enttId in _entities)
 				{
 					entities.Add(new Entity(_storeId, enttId));
 				}
-			}
-
-			public Span<int> GetEntities()
-			{
-				return _entities.GetEntities();
 			}
 
 			public virtual void Init(byte storeId)
@@ -128,16 +123,16 @@ namespace Project_H.ECS
 		private class ArchetypesHolder
 		{
 			private BitMask _bitMask;
-			private SparseSet _entities;
+			private CommonSparseSet _entities;
 
-			public ArchetypesHolder(in BitMask bitMask, SparseSet archetypeEnttSparset)
+			public ArchetypesHolder(in BitMask bitMask, CommonSparseSet archetypeEnttSparset)
 			{
 				_bitMask = bitMask;
 				_entities = archetypeEnttSparset;
 			}
 
 			public ref BitMask GetBitmask() => ref _bitMask;
-			public SparseSet GetSparset() => _entities;
+			public CommonSparseSet GetSparset() => _entities;
 		}
 	}
 }

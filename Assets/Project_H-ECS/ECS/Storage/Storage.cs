@@ -11,8 +11,11 @@ namespace Project_H.ECS
 	{
 		#region Static
 
+		public const int ChunkSize = 128;
+		public const int EntityChunkCount = 1000;
+		public const int ComponentsChunksCount = MaxComponentsCount / ChunkSize;
 		public const int MaxComponentsCount = 1024;
-		public const int MaxEntitiesCount = 100_000;
+
 		private static Storage[] _storages = new Storage[byte.MaxValue];
 		private static byte _storageCount;
 
@@ -49,20 +52,15 @@ namespace Project_H.ECS
 		private int _currentIndex = 0;
 
 		private Queue<int> _reusableIndexes = new();
-
-		private Dictionary<BitMask, SparseSet> _archetypesEntity = new();
-
+		private Dictionary<BitMask, CommonSparseSet> _archetypesEntity = new();
 		private Dictionary<int, List<ArchetypesHolder>> _compBitToArchetypes = new();
-		private SparseSet<IComponentContainer> _components = new();
-		private SparseSet<EntityInfo> _entitiesInfoSparset = new();
-		
-
+		private ValuedSparseSet<IComponentContainer> _components = new(ComponentsChunksCount, ChunkSize);
+		private ValuedSparseSet<EntityInfo> _entitiesInfoSparset = new(EntityChunkCount, ChunkSize);
 
 		private Storage(byte id)
 		{
 			_storageId = id;
 		}
-
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Entity CreateEntity()
@@ -357,7 +355,6 @@ namespace Project_H.ECS
 				var componentContainer = _components.GetRef(in idx);
 				types.Add(componentContainer.GetCompType());
 			}
-			
 		}
 	}
 }

@@ -1,62 +1,125 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using UnityEngine;
+using Project_H_ECS.ECS.Helper;
 
 namespace Project_H.ECS
 {
-	public class SparseSet
+	public class CommonSparseSet
 	{
-		public SparseSet(int entriesCount)
-		{
-			_sparse = new int[entriesCount];
-			_dense = new int [entriesCount];
-		}
+		private int _chunkSize;
+		private int _chunkSizeMinOne;
+		private int _n;
+		private int _chuncksCount;
+		private int _capacity = -1;
 
-		//private const int MaxEntities = 100_000;
-
-		private readonly int[] _sparse;
-		private readonly int[] _dense;
-
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Span<int> GetEntities()
-		{
-			return _dense.AsSpan(0, count);
-		}
-
+		private int[][] _sparse;
+		private int[][] _dense;
 		private int count = 0;
-		public int GetCount() => count;
+
+		public CommonSparseSet(int chunksCount, int chunksSize)
+		{
+			_n = MathUtil.GetPowerOfTwo(chunksSize);
+			_chunkSizeMinOne = chunksSize - 1;
+			_chunkSize = chunksSize;
+			_chuncksCount = chunksCount;
+
+			_sparse = new int[_chuncksCount][];
+			_dense = new int[_chuncksCount][];
+		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Add(int entityID)
+		public void Add(int id)
 		{
-			if (Has(entityID)) return;
+			int chunkIndex = count >> _n;
+			int innerIndex = count & _chunkSizeMinOne;
 
-			_sparse[entityID] = count;
-			_dense[count] = entityID;
+			int sparseChunkIndex = id >> _n;
+			int sparseInnerIndex = id & _chunkSizeMinOne;
+
+			if (chunkIndex > _capacity)
+			{
+				_capacity++;
+				_dense[_capacity] = new int[_chunkSize];
+			}
+
+			var sparseChunk = _sparse[sparseChunkIndex] ?? (_sparse[sparseChunkIndex] = new int[_chunkSize]);
+
+			sparseChunk[sparseInnerIndex] = count;
+			_dense[chunkIndex][innerIndex] = id;
 			count++;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Has(int entityID)
 		{
-			int index = _sparse[entityID];
-			return index < count && _dense[index] == entityID;
+			var sparseChunk = entityID >> _n;
+			var sparseChunkArr = _sparse[sparseChunk];
+			if (sparseChunkArr == null) return false;
+			var sparseChunkId = entityID & _chunkSizeMinOne;
+			var index = sparseChunkArr[sparseChunkId];
+
+			var chunkIndex = index >> _n;
+			var innerIndex = index & _chunkSizeMinOne;
+			return index < count && _dense[chunkIndex][innerIndex] == entityID;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Remove(int entityID)
 		{
-			if (!Has(entityID)) return;
+			var sparseChunk = entityID >> _n;
+			var sparseChunkId = entityID & _chunkSizeMinOne;
 
-			int index = _sparse[entityID];
+			int replaceIndex = _sparse[sparseChunk][sparseChunkId];
+
+			int chunkValuesOldIndex = replaceIndex >> _n;
+			int innerValuesOldIndex = replaceIndex & _chunkSizeMinOne;
+
 			int last = count - 1;
-			int lastEntity = _dense[last];
 
-			_dense[index] = lastEntity;
-			_sparse[lastEntity] = index;
+			int chunkValuesLastIndex = last >> _n;
+			int innerValuesLastIndex = last & _chunkSizeMinOne;
+
+			int lastEntityID = _dense[chunkValuesLastIndex][innerValuesLastIndex];
+
+			var lastSparseChunk = lastEntityID >> _n;
+			var lastSparseChunkId = lastEntityID & _chunkSizeMinOne;
+
+			_dense[chunkValuesOldIndex][innerValuesOldIndex] = lastEntityID;
+			_sparse[lastSparseChunk][lastSparseChunkId] = replaceIndex;
 
 			count--;
 		}
+
+		public int GetCount() => count;
+
+		public struct Enumerator
+		{
+			private readonly CommonSparseSet _set;
+			private int _index;
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public Enumerator(CommonSparseSet set)
+			{
+				_set = set;
+				_index = -1;
+			}
+
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			public bool MoveNext() => ++_index < _set.count;
+
+			public int Current
+			{
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
+				get
+				{
+					var chunkIndex = _index >> _set._n;
+					var innerIndex = _index & _set._chunkSizeMinOne;
+					return _set._dense[chunkIndex][innerIndex];
+				}
+			}
+		}
+
+		public Enumerator GetEnumerator() => new(this);
 
 		public void Clear()
 		{
@@ -67,32 +130,39 @@ namespace Project_H.ECS
 		{
 			if (index < count)
 			{
-				return _dense[index];
+				var denseChunk = index >> _n;
+				var denseChunkId = index & _chunkSizeMinOne;
+				return _dense[denseChunk][denseChunkId];
 			}
 
 			throw new InvalidOperationException($"you cannot reach out of range enement index:{index} count{count}");
 		}
 	}
 
-	public class SparseSet<T>
+	public class ValuedSparseSet<T>
 	{
-		private static int _chunkSize = 128;
-		private static int _chunkSizeMinOne = _chunkSize - 1;
-		private static int _n = 7;
-		private static int _chuncksCount = 1000;
+		private int _chunkSize;
+		private int _chunkSizeMinOne;
+		private int _n;
+		private int _chuncksCount;
 		private int _capacity = -1;
-		
-		public SparseSet()
+
+		private int[][] _sparse;
+		private int[][] _dense;
+		private T[][] _values;
+		private int count = 0;
+
+		public ValuedSparseSet(int chunksCount, int chunksSize)
 		{
+			_n = MathUtil.GetPowerOfTwo(chunksSize);
+			_chunkSizeMinOne = chunksSize - 1;
+			_chunkSize = chunksSize;
+			_chuncksCount = chunksCount;
+
 			_sparse = new int[_chuncksCount][];
 			_dense = new int[_chuncksCount][];
 			_values = new T[_chuncksCount][];
 		}
-
-		private readonly int[][] _sparse;
-		private readonly int[][] _dense;
-		private readonly T[][] _values;
-		private int count = 0;
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add(int id, in T component)
@@ -237,11 +307,11 @@ namespace Project_H.ECS
 
 		public struct Enumerator
 		{
-			private readonly SparseSet<T> _set;
+			private readonly ValuedSparseSet<T> _set;
 			private int _index;
 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public Enumerator(SparseSet<T> set)
+			public Enumerator(ValuedSparseSet<T> set)
 			{
 				_set = set;
 				_index = -1;
@@ -255,8 +325,8 @@ namespace Project_H.ECS
 				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				get
 				{
-					var chunkIndex = _index >> _n;
-					var innerIndex = _index & _chunkSizeMinOne;
+					var chunkIndex = _index >> _set._n;
+					var innerIndex = _index & _set._chunkSizeMinOne;
 					return ref _set._values[chunkIndex][innerIndex];
 				}
 			}
