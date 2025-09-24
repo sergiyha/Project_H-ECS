@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Project_H.ECS
 {
-	public class CommandBuffer
+	public partial class CommandBuffer
 	{
 		private byte _storageId;
 		private Queue<ICommandAction> _commandActions = new();

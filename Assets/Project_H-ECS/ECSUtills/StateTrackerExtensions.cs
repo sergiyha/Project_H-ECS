@@ -33,7 +33,7 @@ namespace Project_H.ECSUtills
 		public T GetCurrentState() => _current;
 	}
 
-	public static class StateTrackerExtensions
+	 public static partial class StateTrackerExtensions
 	{
 		public static void Toggle(this ref StateTracker<bool> boolStateTracker)
 		{

@@ -180,6 +180,15 @@ namespace Project_H.ECS
 			return false;
 		}
 
+		public void GetAllEntities(List<int> entitiesList)
+		{
+			entitiesList.Clear();
+			foreach (var entityInfo in _entitiesInfoSparset)
+			{
+				entitiesList.Add(entityInfo.GetId());
+			}
+		}
+
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Add<T>(in Entity entity, in T component) where T : IComponent
 		{
